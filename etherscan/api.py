@@ -1,5 +1,5 @@
 import requests
-from etherscan.exceptions import check_for_error_status
+from etherscan.exceptions import EtherscanApiError
 
 
 class EtherscanApi:
@@ -7,16 +7,21 @@ class EtherscanApi:
         self.URI = uri
         self.API_KEY = api_key
 
+    def get(self, payload):
+        r = requests.get(self.URI, payload)
+        if int(r.json()["status"]) == 0 and r.json()["message"] != "No transactions found":
+            raise EtherscanApiError(
+                f"{r.json()['message']}\nResult: {r.json()['result']}\nPayload: {payload}"
+            )
+        return r.json()["result"]
+
     def get_ether_price(self):
         payload = {
             "module": "stats",
             "action": "ethprice",
             "apikey": self.API_KEY
         }
-        r = requests.get(self.URI, payload)
-
-        check_for_error_status(r, payload)
-        return float(r.json()["result"]["ethusd"])
+        return float(self.get(payload)["ethusd"])
 
     def get_transactions(self, address):
         payload = {
@@ -27,9 +32,7 @@ class EtherscanApi:
             "endblock": 99999999,
             "apikey": self.API_KEY
         }
-        r = requests.get(self.URI, params=payload)
-        check_for_error_status(r, payload)
-        return r.json()["result"]
+        return self.get(payload)
 
     def get_erc20_transactions(self, address):
         payload = {
@@ -40,9 +43,7 @@ class EtherscanApi:
             "endblock": 99999999,
             "apikey": self.API_KEY
         }
-        r = requests.get(self.URI, params=payload)
-        check_for_error_status(r, payload)
-        return r.json()["result"]
+        return self.get(payload)
 
     def get_balance(self, address):
         payload = {
@@ -52,9 +53,7 @@ class EtherscanApi:
             "tag": "latest",
             "apikey": self.API_KEY
         }
-        r = requests.get(self.URI, params=payload)
-        check_for_error_status(r, payload)
-        return int(r.json()["result"])
+        return int(self.get(payload))
 
     def get_multiple_balances(self, addresses):
         payload = {
@@ -64,6 +63,4 @@ class EtherscanApi:
             "tag": "latest",
             "apikey": self.API_KEY
         }
-        r = requests.get(self.URI, params=payload)
-        check_for_error_status(r, payload)
-        return r.json()["result"]
+        return self.get(payload)
