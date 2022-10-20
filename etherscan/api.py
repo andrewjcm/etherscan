@@ -4,8 +4,6 @@ from etherscan.exceptions import EtherscanApiError
 
 
 class EtherscanApi:
-    WEI_ETH = 0.000000000000000001
-
     def __init__(self, api_key, uri="https://api.etherscan.io/api"):
         self.URI = uri
         self.API_KEY = api_key
