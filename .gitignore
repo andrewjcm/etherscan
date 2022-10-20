@@ -9,3 +9,6 @@ venv
 
 # dotenv
 .env
+
+# wallets
+wallets.txt

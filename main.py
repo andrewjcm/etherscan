@@ -105,7 +105,7 @@ def get_transaction_trends(address):
             "total_value",
             "total_count"
         ]
-        with open(f"transaction_trends_{address}.csv", "w", newline='', encoding='utf-8') as f:
+        with open(f"output/transaction_trends_{address}.csv", "w", newline='', encoding='utf-8') as f:
             w = csv.writer(f)
             w.writerow(headers)
             for add in trans:
@@ -126,6 +126,11 @@ def get_transaction_trends(address):
 
 def main():
     addresses = []
+    with open("wallets.txt", "r") as f:
+        wallet = f.readlines()
+        for address in wallet:
+            addresses.append(address.strip())
+
     for address in addresses:
         time.sleep(0.5)
         try:
