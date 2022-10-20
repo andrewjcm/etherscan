@@ -1,6 +1,5 @@
 import requests
-
-from etherscan.exceptions import EtherscanApiError
+from etherscan.exceptions import check_for_error_status
 
 
 class EtherscanApi:
@@ -16,8 +15,7 @@ class EtherscanApi:
         }
         r = requests.get(self.URI, payload)
 
-        if int(r.json()["status"]) == 0:
-            raise EtherscanApiError(f"{r.json()['message']}\nResult: {r.json()['result']}\nPayload: {payload}")
+        check_for_error_status(r, payload)
         return float(r.json()["result"]["ethusd"])
 
     def get_transactions(self, address):
@@ -30,8 +28,20 @@ class EtherscanApi:
             "apikey": self.API_KEY
         }
         r = requests.get(self.URI, params=payload)
-        if int(r.json()["status"]) == 0 and r.json()["message"] != "No transactions found":
-            raise EtherscanApiError(f"{r.json()['message']}\nResult: {r.json()['result']}\nPayload: {payload}")
+        check_for_error_status(r, payload)
+        return r.json()["result"]
+
+    def get_erc20_transactions(self, address):
+        payload = {
+            "module": "account",
+            "action": "tokentx",
+            "address": address,
+            "startblock": 0,
+            "endblock": 99999999,
+            "apikey": self.API_KEY
+        }
+        r = requests.get(self.URI, params=payload)
+        check_for_error_status(r, payload)
         return r.json()["result"]
 
     def get_balance(self, address):
@@ -43,8 +53,7 @@ class EtherscanApi:
             "apikey": self.API_KEY
         }
         r = requests.get(self.URI, params=payload)
-        if int(r.json()["status"]) == 0:
-            raise EtherscanApiError(f"{r.json()['message']}\nResult: {r.json()['result']}\nPayload: {payload}")
+        check_for_error_status(r, payload)
         return int(r.json()["result"])
 
     def get_multiple_balances(self, addresses):
@@ -56,6 +65,5 @@ class EtherscanApi:
             "apikey": self.API_KEY
         }
         r = requests.get(self.URI, params=payload)
-        if int(r.json()["status"]) == 0:
-            raise EtherscanApiError(f"{r.json()['message']}\nResult: {r.json()['result']}\nPayload: {payload}")
+        check_for_error_status(r, payload)
         return r.json()["result"]
