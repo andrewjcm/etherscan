@@ -1,71 +1,11 @@
 import csv
 import time
-
-import requests
 from dotenv import dotenv_values
+from etherscan.api import EtherscanApi
 
 env = dotenv_values(".env")
-
-URI = env["URI"]
 API_KEY = env["API_KEY"]
 WEI_ETH = 0.000000000000000001
-
-
-def get_ether_price():
-    payload = {
-        "module": "stats",
-        "action": "ethprice",
-        "apikey": API_KEY
-    }
-    r = requests.get(URI, payload)
-    try:
-        return float(r.json()["result"]["ethusd"])
-    except TypeError:
-        raise Exception("Sorry buddy, there was an api error: " + r.json()["result"])
-
-
-ETH_USD = get_ether_price()
-
-
-def calc_usd_from_wei(wei):
-    return float(wei) * WEI_ETH * ETH_USD
-
-
-def get_transactions(address):
-    payload = {
-        "module": "account",
-        "action": "txlist",
-        "address": address,
-        "startblock": 0,
-        "endblock": 99999999,
-        "apikey": API_KEY
-    }
-    r = requests.get(URI, params=payload)
-    return r.json()["result"]
-
-
-def get_balance(address):
-    payload = {
-        "module": "account",
-        "action": "balance",
-        "address": address,
-        "tag": "latest",
-        "apikey": API_KEY
-    }
-    r = requests.get(URI, params=payload)
-    return int(r.json()["result"])
-
-
-def get_multiple_balances(addresses):
-    payload = {
-        "module": "account",
-        "action": "balancemulti",
-        "address": ",".join(addresses),
-        "tag": "latest",
-        "apikey": API_KEY
-    }
-    r = requests.get(URI, params=payload)
-    return r.json()["result"]
 
 
 def get_transaction_trends(address):
@@ -89,7 +29,10 @@ def get_transaction_trends(address):
         dict_to_mod[address_str]["total_value"] += usd_value
         dict_to_mod[address_str]["total_count"] += 1
 
-    def process_transactions(transactions, address):
+    def process_transactions(transactions, address, eth_usd):
+        def calc_usd_from_wei(wei):
+            return float(wei) * WEI_ETH * eth_usd
+
         trans = {}
         for t in transactions:
             usd_val = calc_usd_from_wei(t["value"])
@@ -114,10 +57,12 @@ def get_transaction_trends(address):
                     row.append(trans[add][header])
                 w.writerow(row)
 
-    transactions = get_transactions(address)
+    api = EtherscanApi(api_key=API_KEY)
+    transactions = api.get_transactions(address)
+    ETH_USD = api.get_ether_price()
 
     if type(transactions) == list:
-        process_transactions(transactions, address)
+        process_transactions(transactions, address, ETH_USD)
     elif type(transactions) == str:
         raise TypeError("Sorry buddy, there was an error with the api: " + transactions)
     else:
