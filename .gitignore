@@ -1,0 +1,11 @@
+# venv
+venv
+
+# csv files
+*.csv
+
+# Jetbrains
+.idea
+
+# dotenv
+.env
