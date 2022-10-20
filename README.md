@@ -2,7 +2,7 @@
 1) Create .env file in the same directory as main.py and put:
     ```
    URI=https://api.etherscan.io/api
-   API_KEY=<YOUR ETHERSCAN API KEY 
+   API_KEY=<YOUR ETHERSCAN API KEY>
    ```
 2) Install dependancies:
     ```commandline
